@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"sync"
 )
 
 type Rule struct {
@@ -16,6 +17,7 @@ type Rule struct {
 
 type Server struct {
 	rules []Rule
+	rmut  sync.RWMutex
 }
 
 func (s *Server) LoadRules(file string) error {
@@ -24,7 +26,9 @@ func (s *Server) LoadRules(file string) error {
 		return err
 	}
 	defer f.Close()
+	s.rmut.Lock()
 	err = json.NewDecoder(f).Decode(&s.rules)
+	s.rmut.Unlock()
 	if err != nil {
 		return &invalidRuleError{err}
 	}
