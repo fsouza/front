@@ -1,0 +1,14 @@
+[
+	{
+		"domain": "souza.cc",
+		"backend": "localhost:3232"
+	},
+	{
+		"domain": "golang.org",
+		"backend": "localhost:3131"
+	},
+	{
+		"domain": "globo.com",
+		"backend": "localhost:3030"
+	}
+]
