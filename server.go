@@ -42,3 +42,5 @@ type invalidRuleError struct {
 func (e *invalidRuleError) Error() string {
 	return "Invalid rule file: " + e.err.Error()
 }
+
+func main() {}
