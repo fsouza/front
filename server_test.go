@@ -41,6 +41,7 @@ func TestLoadRulesFailures(t *testing.T) {
 	}{
 		{"testdata/invalidrules.json", "Invalid rule file: invalid character '}' looking for beginning of object key string"},
 		{"testdata/file-not-found.json", "open testdata/file-not-found.json: no such file or directory"},
+		{"testdata/invaliddomain.json", "Invalid rule file: parse http://%%%%: hexadecimal escape in host"},
 	}
 	s := Server{}
 	for _, tt := range tests {

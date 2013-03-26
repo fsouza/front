@@ -1,0 +1,6 @@
+[
+	{
+		"domain": "souza.cc",
+		"backends": ["http://%%%%"]
+	}
+]
