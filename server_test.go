@@ -5,7 +5,7 @@
 package main
 
 import (
-	"reflect"
+	"github.com/fsouza/lb"
 	"testing"
 )
 
@@ -15,13 +15,22 @@ func TestLoadRules(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	b1, _ := lb.NewLoadBalancer("localhost:3232")
+	b2, _ := lb.NewLoadBalancer("localhost:3131")
+	b3, _ := lb.NewLoadBalancer("localhost:3030", "localhost:2929", "localhost:2121")
 	want := []Rule{
-		{Domain: "souza.cc", Backend: "localhost:3232"},
-		{Domain: "golang.org", Backend: "localhost:3131"},
-		{Domain: "globo.com", Backend: "localhost:3030"},
+		{Domain: "souza.cc", Backend: b1},
+		{Domain: "golang.org", Backend: b2},
+		{Domain: "globo.com", Backend: b3},
 	}
-	if !reflect.DeepEqual(s.rules, want) {
-		t.Errorf("LoadRules:\nWant %#v.\nGot %#v.", want, s.rules)
+	for i, rule := range s.rules {
+		wanted := want[i]
+		if wanted.Domain != rule.Domain {
+			t.Errorf("LoadRules: Wrong domain. Want %q. Got %q", wanted.Domain, rule.Domain)
+		}
+		if rule.Backend == nil {
+			t.Errorf("LoadRules. Wante non-nil load balancer. Got <nil>.")
+		}
 	}
 }
 

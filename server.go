@@ -6,13 +6,19 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/fsouza/lb"
 	"os"
 	"sync"
 )
 
+type jsonRule struct {
+	Domain   string
+	Backends []string
+}
+
 type Rule struct {
 	Domain  string
-	Backend string
+	Backend *lb.LoadBalancer
 }
 
 type Server struct {
@@ -26,12 +32,22 @@ func (s *Server) LoadRules(file string) error {
 		return err
 	}
 	defer f.Close()
-	s.rmut.Lock()
-	err = json.NewDecoder(f).Decode(&s.rules)
-	s.rmut.Unlock()
+	var rs []jsonRule
+	err = json.NewDecoder(f).Decode(&rs)
 	if err != nil {
 		return &invalidRuleError{err}
 	}
+	rules := make([]Rule, len(rs))
+	for i, r := range rs {
+		balancer, err := lb.NewLoadBalancer(r.Backends...)
+		if err != nil {
+			return &invalidRuleError{err}
+		}
+		rules[i] = Rule{Domain: r.Domain, Backend: balancer}
+	}
+	s.rmut.Lock()
+	s.rules = rules
+	s.rmut.Unlock()
 	return nil
 }
 
