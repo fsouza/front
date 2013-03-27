@@ -9,7 +9,9 @@ import (
 	"github.com/fsouza/lb"
 	"github.com/howeyc/fsnotify"
 	"log"
+	"net/http"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -60,6 +62,28 @@ func NewServer(ruleFile string) (*Server, error) {
 		}
 	}()
 	return &s, nil
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	host := r.Header.Get("Host")
+	if host == "" {
+		http.Error(w, "Missing Host header", http.StatusBadRequest)
+		return
+	}
+	var rule Rule
+	s.rmut.RLock()
+	for _, r := range s.rules {
+		if strings.Contains(host, r.Domain) {
+			rule = r
+			break
+		}
+	}
+	s.rmut.RUnlock()
+	if rule.Domain == "" {
+		http.Error(w, "Page not found", http.StatusNotFound)
+		return
+	}
+	rule.Backend.ServeHTTP(w, r)
 }
 
 func loadRules(file string) ([]Rule, error) {
