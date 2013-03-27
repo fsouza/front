@@ -6,6 +6,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"github.com/fsouza/lb"
 	"github.com/howeyc/fsnotify"
 	"log"
@@ -115,4 +116,21 @@ func (e *invalidRuleError) Error() string {
 	return "Invalid rule file: " + e.err.Error()
 }
 
-func main() {}
+func main() {
+	var listen, rulesFile string
+	flag.StringVar(&listen, "listen", ":8080", "Address to listen to HTTP requests.")
+	flag.StringVar(&rulesFile, "rules", "", "JSON file to load rules from. You must provide it.")
+	flag.Parse()
+	if rulesFile == "" {
+		flag.Usage()
+		os.Exit(2)
+	}
+	server, err := NewServer(rulesFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	http.Handle("/", server)
+	if err := http.ListenAndServe(listen, nil); err != nil {
+		log.Fatal(err)
+	}
+}
