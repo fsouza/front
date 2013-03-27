@@ -11,7 +11,7 @@ import (
 
 func TestLoadRules(t *testing.T) {
 	s := Server{}
-	err := s.loadRules("testdata/rules.json")
+	rules, err := s.loadRules("testdata/rules.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func TestLoadRules(t *testing.T) {
 		{Domain: "golang.org", Backend: b2},
 		{Domain: "globo.com", Backend: b3},
 	}
-	for i, rule := range s.rules {
+	for i, rule := range rules {
 		wanted := want[i]
 		if wanted.Domain != rule.Domain {
 			t.Errorf("LoadRules: Wrong domain. Want %q. Got %q", wanted.Domain, rule.Domain)
@@ -45,7 +45,10 @@ func TestLoadRulesFailures(t *testing.T) {
 	}
 	s := Server{}
 	for _, tt := range tests {
-		err := s.loadRules(tt.filename)
+		rules, err := s.loadRules(tt.filename)
+		if rules != nil {
+			t.Errorf("LoadRules(%q). Want <nil>. Got %#v.", tt.filename, rules)
+		}
 		if err == nil {
 			t.Errorf("LoadRules(%q): Want %q. Got %v.", tt.filename, tt.msg, nil)
 			continue

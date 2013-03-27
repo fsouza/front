@@ -26,29 +26,26 @@ type Server struct {
 	rmut  sync.RWMutex
 }
 
-func (s *Server) loadRules(file string) error {
+func (s *Server) loadRules(file string) ([]Rule, error) {
 	f, err := os.Open(file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
 	var rs []jsonRule
 	err = json.NewDecoder(f).Decode(&rs)
 	if err != nil {
-		return &invalidRuleError{err}
+		return nil, &invalidRuleError{err}
 	}
 	rules := make([]Rule, len(rs))
 	for i, r := range rs {
 		balancer, err := lb.NewLoadBalancer(r.Backends...)
 		if err != nil {
-			return &invalidRuleError{err}
+			return nil, &invalidRuleError{err}
 		}
 		rules[i] = Rule{Domain: r.Domain, Backend: balancer}
 	}
-	s.rmut.Lock()
-	s.rules = rules
-	s.rmut.Unlock()
-	return nil
+	return rules, nil
 }
 
 type invalidRuleError struct {
