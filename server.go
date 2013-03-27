@@ -36,12 +36,12 @@ func NewServer(ruleFile string) (*Server, error) {
 	s := Server{rules: rules}
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Printf("Warning: fronted is not watching rule file %q. Reason: %s", ruleFile, err)
+		log.Printf("Warning: frontend server is not watching rule file %q. Reason: %s", ruleFile, err)
 		return &s, nil
 	}
 	err = w.Watch(ruleFile)
 	if err != nil {
-		log.Printf("Warning: fronted is not watching rule file %q. Reason: %s", ruleFile, err)
+		log.Printf("Warning: frontend server is not watching rule file %q. Reason: %s", ruleFile, err)
 		return &s, nil
 	}
 	go func() {
