@@ -5,9 +5,52 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/fsouza/lb"
+	"os"
+	"os/exec"
 	"testing"
+	"time"
 )
+
+func TestNewServer(t *testing.T) {
+	rules := []jsonRule{
+		{Domain: "souza.cc", Backends: []string{"localhost:3232"}},
+		{Domain: "golang.org", Backends: []string{"localhost:3131"}},
+		{Domain: "globo.com", Backends: []string{"localhost:3030", "localhost:2929", "localhost:2121"}},
+		{Domain: "rust-lang.org", Backends: []string{"10.10.10.10:8080"}},
+	}
+	exec.Command("cp", "testdata/rules.json", "/tmp/rules-server.json").Run()
+	defer exec.Command("rm", "/tmp/rules-server.json").Run()
+	s, err := NewServer("/tmp/rules-server.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"souza.cc", "golang.org", "globo.com"}
+	for i, w := range want {
+		if s.rules[i].Domain != w {
+			t.Errorf("NewServer: Wrong domain. Want %q. Got %q.", w, s.rules[i])
+		}
+	}
+	f, err := os.OpenFile("/tmp/rules-server.json", os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = json.NewEncoder(f).Encode(rules); err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	time.Sleep(1e6)
+	want = append(want, "rust-lang.org")
+	if len(want) != len(s.rules) {
+		t.Fatalf("NewServer did not watch the file for changes. Want %#v. Got %#v.", want, s.rules)
+	}
+	for i, w := range want {
+		if s.rules[i].Domain != w {
+			t.Errorf("NewServer: Wrong domain. Want %q. Got %q.", w, s.rules[i])
+		}
+	}
+}
 
 func TestLoadRules(t *testing.T) {
 	s := Server{}

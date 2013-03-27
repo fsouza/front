@@ -7,6 +7,8 @@ package main
 import (
 	"encoding/json"
 	"github.com/fsouza/lb"
+	"github.com/howeyc/fsnotify"
+	"log"
 	"os"
 	"sync"
 )
@@ -24,6 +26,41 @@ type Rule struct {
 type Server struct {
 	rules []Rule
 	rmut  sync.RWMutex
+}
+
+func NewServer(ruleFile string) (*Server, error) {
+	s := Server{}
+	var err error
+	s.rules, err = s.loadRules(ruleFile)
+	if err != nil {
+		return nil, err
+	}
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Printf("Warning: fronted is not watching rule file %q. Reason: %s", ruleFile, err)
+		return &s, nil
+	}
+	err = w.Watch(ruleFile)
+	if err != nil {
+		log.Printf("Warning: fronted is not watching rule file %q. Reason: %s", ruleFile, err)
+		return &s, nil
+	}
+	go func() {
+		for {
+			select {
+			case e := <-w.Event:
+				if e.IsModify() {
+					if rules, err := s.loadRules(ruleFile); err == nil {
+						s.rmut.Lock()
+						s.rules = rules
+						s.rmut.Unlock()
+					}
+				}
+			case <-w.Error:
+			}
+		}
+	}()
+	return &s, nil
 }
 
 func (s *Server) loadRules(file string) ([]Rule, error) {
