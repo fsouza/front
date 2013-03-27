@@ -45,9 +45,12 @@ func TestNewServer(t *testing.T) {
 	f.Close()
 	time.Sleep(1e6)
 	want = append(want, "rust-lang.org")
+	s.rmut.RLock()
 	if len(want) != len(s.rules) {
+		s.rmut.RUnlock()
 		t.Fatalf("NewServer did not watch the file for changes. Want %#v. Got %#v.", want, s.rules)
 	}
+	s.rmut.RUnlock()
 	for i, w := range want {
 		if s.rules[i].Domain != w {
 			t.Errorf("NewServer: Wrong domain. Want %q. Got %q.", w, s.rules[i])
