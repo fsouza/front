@@ -26,7 +26,7 @@ type Server struct {
 	rmut  sync.RWMutex
 }
 
-func (s *Server) LoadRules(file string) error {
+func (s *Server) loadRules(file string) error {
 	f, err := os.Open(file)
 	if err != nil {
 		return err

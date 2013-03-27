@@ -11,7 +11,7 @@ import (
 
 func TestLoadRules(t *testing.T) {
 	s := Server{}
-	err := s.LoadRules("testdata/rules.json")
+	err := s.loadRules("testdata/rules.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestLoadRulesFailures(t *testing.T) {
 	}
 	s := Server{}
 	for _, tt := range tests {
-		err := s.LoadRules(tt.filename)
+		err := s.loadRules(tt.filename)
 		if err == nil {
 			t.Errorf("LoadRules(%q): Want %q. Got %v.", tt.filename, tt.msg, nil)
 			continue

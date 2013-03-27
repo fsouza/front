@@ -16,7 +16,7 @@ func TestLoadRulesIsSafe(t *testing.T) {
 	n := 5
 	s := Server{}
 	var load = func() {
-		s.LoadRules("testdata/rules.json")
+		s.loadRules("testdata/rules.json")
 		wg.Done()
 	}
 	wg.Add(n)
