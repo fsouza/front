@@ -9,6 +9,7 @@ import (
 	"github.com/fsouza/lb"
 	"os"
 	"os/exec"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -48,6 +49,50 @@ func TestNewServer(t *testing.T) {
 	for i, w := range want {
 		if s.rules[i].Domain != w {
 			t.Errorf("NewServer: Wrong domain. Want %q. Got %q.", w, s.rules[i])
+		}
+	}
+}
+
+func TestNewServerWatchingFileWithInvalidJSON(t *testing.T) {
+	exec.Command("cp", "testdata/rules.json", "/tmp/rules-server.json").Run()
+	defer exec.Command("rm", "/tmp/rules-server.json").Run()
+	s, err := NewServer("/tmp/rules-server.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := s.rules
+	f, err := os.OpenFile("/tmp/rules-server.json", os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Write([]byte("------"))
+	f.Close()
+	time.Sleep(1e6)
+	if !reflect.DeepEqual(s.rules, old) {
+		t.Errorf("NewServer(%q) reloaded broken file. Want %#v. Got %#v.", "/tmp/rules-server.json", old, s.rules)
+	}
+}
+
+func TestNewServerErrors(t *testing.T) {
+	tests := []struct {
+		filename string
+		msg      string
+	}{
+		{"testdata/invalidrules.json", "Invalid rule file: invalid character '}' looking for beginning of object key string"},
+		{"testdata/file-not-found.json", "open testdata/file-not-found.json: no such file or directory"},
+		{"testdata/invaliddomain.json", "Invalid rule file: parse http://%%%%: hexadecimal escape in host"},
+	}
+	for _, tt := range tests {
+		server, err := NewServer(tt.filename)
+		if server != nil {
+			t.Errorf("NewServer(%q). Want <nil>. Got %#v.", tt.filename, server)
+		}
+		if err == nil {
+			t.Errorf("NewServer(%q): Want %q. Got %v.", tt.filename, tt.msg, nil)
+			continue
+		}
+		if err.Error() != tt.msg {
+			t.Errorf("NewServer(%q): Want %q. Got %q.", tt.filename, tt.msg, err.Error())
 		}
 	}
 }
