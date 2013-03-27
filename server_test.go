@@ -53,8 +53,7 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestLoadRules(t *testing.T) {
-	s := Server{}
-	rules, err := s.loadRules("testdata/rules.json")
+	rules, err := loadRules("testdata/rules.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,9 +85,8 @@ func TestLoadRulesFailures(t *testing.T) {
 		{"testdata/file-not-found.json", "open testdata/file-not-found.json: no such file or directory"},
 		{"testdata/invaliddomain.json", "Invalid rule file: parse http://%%%%: hexadecimal escape in host"},
 	}
-	s := Server{}
 	for _, tt := range tests {
-		rules, err := s.loadRules(tt.filename)
+		rules, err := loadRules(tt.filename)
 		if rules != nil {
 			t.Errorf("LoadRules(%q). Want <nil>. Got %#v.", tt.filename, rules)
 		}

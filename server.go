@@ -29,12 +29,11 @@ type Server struct {
 }
 
 func NewServer(ruleFile string) (*Server, error) {
-	s := Server{}
-	var err error
-	s.rules, err = s.loadRules(ruleFile)
+	rules, err := loadRules(ruleFile)
 	if err != nil {
 		return nil, err
 	}
+	s := Server{rules: rules}
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Printf("Warning: fronted is not watching rule file %q. Reason: %s", ruleFile, err)
@@ -50,7 +49,7 @@ func NewServer(ruleFile string) (*Server, error) {
 			select {
 			case e := <-w.Event:
 				if e.IsModify() {
-					if rules, err := s.loadRules(ruleFile); err == nil {
+					if rules, err := loadRules(ruleFile); err == nil {
 						s.rmut.Lock()
 						s.rules = rules
 						s.rmut.Unlock()
@@ -63,7 +62,7 @@ func NewServer(ruleFile string) (*Server, error) {
 	return &s, nil
 }
 
-func (s *Server) loadRules(file string) ([]Rule, error) {
+func loadRules(file string) ([]Rule, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
