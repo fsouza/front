@@ -135,6 +135,7 @@ func TestServeHTTP(t *testing.T) {
 	for _, tt := range tests {
 		request, _ := http.NewRequest("GET", "/", nil)
 		request.Header.Set("Host", tt.host)
+		request.Host = tt.host
 		recorder := httptest.NewRecorder()
 		s.ServeHTTP(recorder, request)
 		if recorder.Code != http.StatusOK {
@@ -164,6 +165,7 @@ func TestServeHTTPErrors(t *testing.T) {
 	for _, tt := range tests {
 		request, _ := http.NewRequest("GET", "/", nil)
 		request.Header.Set("Host", tt.host)
+		request.Host = tt.host
 		recorder := httptest.NewRecorder()
 		s.ServeHTTP(recorder, request)
 		if recorder.Code != tt.code {

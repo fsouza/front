@@ -64,16 +64,15 @@ func NewServer(ruleFile string) (*Server, error) {
 	return &s, nil
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	host := r.Header.Get("Host")
-	if host == "" {
+func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if req.Host == "" {
 		http.Error(w, "Missing Host header", http.StatusBadRequest)
 		return
 	}
 	var rule Rule
 	s.rmut.RLock()
 	for _, r := range s.rules {
-		if strings.Contains(host, r.Domain) {
+		if strings.Contains(req.Host, r.Domain) {
 			rule = r
 			break
 		}
@@ -83,7 +82,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 		return
 	}
-	rule.Backend.ServeHTTP(w, r)
+	rule.Backend.ServeHTTP(w, req)
 }
 
 func loadRules(file string) ([]Rule, error) {
