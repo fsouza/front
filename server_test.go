@@ -164,6 +164,7 @@ func TestServeHTTPErrors(t *testing.T) {
 	}{
 		{"", http.StatusBadRequest, "Missing Host header\n"},
 		{"globo.com", http.StatusNotFound, "Page not found\n"},
+		{"franciscosouza.cc", http.StatusNotFound, "Page not found\n"},
 	}
 	for _, tt := range tests {
 		request, _ := http.NewRequest("GET", "/", nil)

@@ -73,7 +73,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var rule Rule
 	s.rmut.RLock()
 	for _, r := range s.rules {
-		if strings.Contains(req.Host, r.Domain) {
+		if req.Host == r.Domain || strings.HasSuffix(req.Host, "."+r.Domain) {
 			rule = r
 			break
 		}
